@@ -65,7 +65,6 @@ const UserModelInit = (sequelize: Sequelize) => {
               );
             });
           } else {
-            email = email.replace(/[^a-zA-Z0-9@._%+-]/g, "");
             email = security.sanitizeSecure(email);
           }
           this.setDataValue("email", email);

@@ -3,21 +3,29 @@
  * SPDX-License-Identifier: MIT
  */
 
-import { type Request, type Response } from 'express'
+import { type Request, type Response } from "express";
 
-import * as challengeUtils from '../lib/challengeUtils'
-import { reviewsCollection } from '../data/mongodb'
-import { challenges } from '../data/datacache'
-import * as security from '../lib/insecurity'
-import * as utils from '../lib/utils'
+import * as challengeUtils from "../lib/challengeUtils";
+import { reviewsCollection } from "../data/mongodb";
+import { challenges } from "../data/datacache";
+import * as security from "../lib/insecurity";
+import * as utils from "../lib/utils";
 
-export function createProductReviews () {
+export function createProductReviews() {
   return async (req: Request, res: Response) => {
-    const user = security.authenticatedUsers.from(req)
+    const user = security.authenticatedUsers.from(req);
+    console.log(user?.data?.email, req.body.author);
     challengeUtils.solveIf(
       challenges.forgedReviewChallenge,
       () => user?.data?.email !== req.body.author
-    )
+    );
+
+    if (user?.data?.email !== req.body.author) {
+      return res.status(401).json({
+        status: "error",
+        message: "You are not authorized to create this review",
+      });
+    }
 
     try {
       await reviewsCollection.insert({
@@ -25,11 +33,11 @@ export function createProductReviews () {
         message: req.body.message,
         author: req.body.author,
         likesCount: 0,
-        likedBy: []
-      })
-      return res.status(201).json({ status: 'success' })
+        likedBy: [],
+      });
+      return res.status(201).json({ status: "success" });
     } catch (err: unknown) {
-      return res.status(500).json(utils.getErrorMessage(err))
+      return res.status(500).json(utils.getErrorMessage(err));
     }
-  }
+  };
 }
